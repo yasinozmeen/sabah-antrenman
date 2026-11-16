@@ -1,0 +1,815 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Antrenman">
+<meta name="format-detection" content="telephone=no">
+<meta name="theme-color" content="#F4F2EE" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#15171A" media="(prefers-color-scheme: dark)">
+<title>Sabah Antrenman Planı</title>
+<meta name="description" content="Yasin ve Rümeysa için 07:00–08:30 arasına sığan, kişiye özel antrenman programları ve varyasyonları.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=Barlow:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+/* Layout: tek kolon, telefon önce. Üstte yapışkan kişi seçici; altında saat planı, kişinin varyasyon sekmeleri, gün sekmeleri, video kartları ve kuralları. */
+:root{
+  --bg:#F4F2EE; --surface:#FFFFFF; --ink:#1C1F24; --muted:#5D636B; --line:#E2DED7;
+  --yasin:#D9480F; --yasin-soft:#FDE8DD; --rumeysa:#0B7A6E; --rumeysa-soft:#DDF1EE;
+  --display:"Barlow Condensed","Arial Narrow",system-ui,sans-serif;
+  --body:"Barlow",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --r:14px; color-scheme:light;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --bg:#15171A; --surface:#1F2226; --ink:#F1EFEA; --muted:#A3A8AF; --line:#30343A;
+    --yasin:#FF7A3D; --yasin-soft:#3A2418; --rumeysa:#3CC7B4; --rumeysa-soft:#15332F; color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#15171A; --surface:#1F2226; --ink:#F1EFEA; --muted:#A3A8AF; --line:#30343A;
+  --yasin:#FF7A3D; --yasin-soft:#3A2418; --rumeysa:#3CC7B4; --rumeysa-soft:#15332F; color-scheme:dark;
+}
+body[data-person="yasin"]{--acc:var(--yasin);--acc-soft:var(--yasin-soft)}
+body[data-person="rumeysa"]{--acc:var(--rumeysa);--acc-soft:var(--rumeysa-soft)}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+.switch-bar{padding-top:calc(10px + env(safe-area-inset-top))!important}
+body{padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-right);padding-bottom:env(safe-area-inset-bottom);-webkit-tap-highlight-color:transparent}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--body);font-size:16px;line-height:1.55}
+.wrap{max-width:980px;margin:0 auto;padding:0 18px}
+h1,h2,h3{font-family:var(--display);line-height:1.05;text-wrap:balance;margin:0;letter-spacing:.01em}
+h1{font-size:clamp(2.3rem,7vw,3.4rem);font-weight:800;text-transform:uppercase}
+h2{font-size:clamp(1.6rem,4.5vw,2.1rem);font-weight:700;text-transform:uppercase}
+h3{font-size:1.3rem;font-weight:700}
+p{margin:0}
+.muted{color:var(--muted)}
+.lead{max-width:62ch;font-size:1.06rem}
+section{padding:34px 0;border-top:1px solid var(--line)}
+section > .wrap{display:grid;gap:18px}
+
+header{padding:32px 0 20px}
+header .wrap{display:grid;gap:14px}
+
+/* Person switch */
+.switch-bar{position:sticky;top:0;z-index:20;background:color-mix(in srgb,var(--bg) 88%,transparent);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border-bottom:1px solid var(--line);padding:10px 0}
+.person-switch{position:relative;display:grid;grid-template-columns:1fr 1fr;gap:4px;padding:4px;background:var(--surface);border:1px solid var(--line);border-radius:14px;max-width:520px}
+.person-switch button{position:relative;z-index:1;appearance:none;border:0;background:transparent;color:var(--muted);font:700 1.15rem var(--display);text-transform:uppercase;letter-spacing:.04em;min-height:52px;border-radius:10px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px;transition:color .2s ease-out}
+.person-switch button[aria-pressed="true"]{color:#fff}
+.person-switch button:focus-visible{outline:3px solid var(--acc);outline-offset:2px}
+.person-switch .dot{width:10px;height:10px;border-radius:50%;background:currentColor}
+.person-ind{position:absolute;z-index:0;top:4px;bottom:4px;left:4px;width:calc(50% - 6px);border-radius:10px;background:var(--acc);transition:transform .25s ease-out,background-color .25s ease-out}
+body[data-person="rumeysa"] .person-ind{transform:translateX(calc(100% + 4px))}
+
+/* Clock timeline */
+.clock{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));border:1px solid var(--line);border-radius:var(--r);overflow:hidden;background:var(--surface)}
+.slot{padding:12px;border-right:1px solid var(--line);display:grid;gap:2px;align-content:start}
+.slot:last-child{border-right:0}
+.slot time{font-family:var(--display);font-weight:700;font-size:1.05rem;font-variant-numeric:tabular-nums}
+.slot b{font-weight:600}
+.slot span{font-size:.85rem;color:var(--muted)}
+.slot.main{background:var(--ink);color:var(--bg)} .slot.main span{color:inherit;opacity:.75}
+.slot.buffer{background:repeating-linear-gradient(135deg,var(--surface) 0 8px,var(--bg) 8px 16px)}
+@media (max-width:700px){.clock{grid-template-columns:1fr}.slot{border-right:0;border-bottom:1px solid var(--line);grid-template-columns:110px 1fr;align-items:center}.slot:last-child{border-bottom:0}.slot span{grid-column:2}}
+
+.cal{overflow-x:auto}
+.cal table{border-collapse:separate;border-spacing:5px;width:100%;min-width:520px;font-variant-numeric:tabular-nums}
+.cal th{font-family:var(--display);font-weight:700;font-size:.95rem;color:var(--muted);text-align:center;padding:4px}
+.cal th.row{text-align:left}
+.cal td{text-align:center;border-radius:10px;padding:10px 4px;font-weight:600;font-size:.92rem;background:var(--surface);border:1px solid var(--line)}
+.cal td.gym{background:var(--ink);color:var(--bg);border-color:var(--ink);font-family:var(--display);font-size:1.05rem}
+.cal td.walk{color:var(--rumeysa)}
+.cal td.rest{color:var(--muted);font-weight:500}
+
+/* Person view */
+.person-view{display:grid;gap:0;animation:fadein .22s ease-out}
+.person-view[hidden]{display:none}
+@keyframes fadein{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+.who-head{display:grid;gap:10px}
+.who-head .name{display:inline-flex;align-items:center;gap:10px;color:var(--acc)}
+.facts{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(170px,100%),1fr));gap:10px}
+.fact{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:12px 14px;border-top:3px solid var(--acc)}
+.fact b{display:block;font-family:var(--display);font-size:1.3rem;line-height:1.15}
+.fact span{font-size:.9rem;color:var(--muted)}
+
+.tabs{position:relative;display:flex;gap:4px;padding:4px;background:var(--surface);border:1px solid var(--line);border-radius:12px;overflow-x:auto}
+.tab{position:relative;z-index:1;flex:1 0 auto;appearance:none;border:0;background:transparent;color:var(--muted);font:600 1rem var(--body);padding:10px 14px;min-height:44px;border-radius:9px;cursor:pointer;transition:color .2s ease-out;white-space:nowrap}
+.tab small{display:block;font-size:.75rem;font-weight:500;opacity:.85}
+.tab[aria-selected="true"]{color:#fff}
+.tab:focus-visible{outline:3px solid var(--acc);outline-offset:2px}
+.tab-ind{position:absolute;z-index:0;top:4px;bottom:4px;left:0;width:0;background:var(--acc);border-radius:9px;transition:transform .25s ease-out,width .25s ease-out}
+.day-tabs .tab[aria-selected="true"]{color:var(--bg)}
+.day-tabs .tab-ind{background:var(--ink)}
+@media (max-width:560px){.tab{flex:1 1 0;min-width:0;white-space:normal;padding:8px 6px;font-size:.92rem;line-height:1.2}}
+
+.panel{display:grid;gap:16px;animation:fadein .22s ease-out}
+.panel[hidden]{display:none}
+.badge{justify-self:start;font-family:var(--display);font-weight:700;font-size:.85rem;letter-spacing:.06em;text-transform:uppercase;padding:4px 10px;border-radius:6px;background:var(--acc);color:#fff}
+.procon{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(230px,100%),1fr));gap:10px}
+.procon div{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:12px 14px;font-size:.95rem}
+.procon b{display:block;font-family:var(--display);font-size:1rem;text-transform:uppercase;letter-spacing:.04em;margin-bottom:2px}
+
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(280px,100%),1fr));gap:14px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);overflow:hidden;display:grid;grid-template-rows:auto 1fr}
+.anim{position:relative;aspect-ratio:16/9;background:#2a2d31;overflow:hidden}
+.anim video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.anim .loading{position:absolute;inset:0;display:grid;place-items:center;color:#cfd3d8;font-size:.85rem}
+.anim .num{position:absolute;left:10px;top:10px;background:rgba(0,0,0,.72);color:#fff;font-family:var(--display);font-weight:700;font-size:1rem;padding:2px 9px;border-radius:6px}
+.anim .ss{position:absolute;right:10px;top:10px;background:var(--acc);color:#fff;font-size:.75rem;font-weight:700;padding:3px 8px;border-radius:6px;text-transform:uppercase;letter-spacing:.04em}
+.card .body{padding:14px;display:grid;gap:10px;align-content:start}
+.card h3 small{display:block;font-family:var(--body);font-size:.82rem;font-weight:500;color:var(--muted);margin-top:2px}
+.set{border-radius:10px;padding:8px 12px;background:var(--acc-soft);display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;font-variant-numeric:tabular-nums}
+.set .val{font-family:var(--display);font-size:1.4rem;font-weight:700;color:var(--acc)}
+.set .rest{font-size:.85rem;color:var(--muted)}
+.tip{font-size:.92rem;color:var(--muted);border-left:3px solid var(--line);padding-left:10px}
+.vid{justify-self:start;display:inline-flex;align-items:center;gap:8px;min-height:40px;padding:6px 12px;border-radius:10px;border:1px solid var(--line);color:var(--ink);font-weight:600;font-size:.9rem;text-decoration:none;transition:border-color .15s ease-out}
+.vid:hover{border-color:var(--acc)} .vid:focus-visible{outline:3px solid var(--acc);outline-offset:2px}
+.vid svg{width:14px;height:14px;color:var(--acc)}
+
+.block{background:var(--ink);color:var(--bg);border-radius:var(--r);padding:16px;display:grid;gap:12px}
+.block h3{color:inherit}
+.block .mini{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(160px,100%),1fr));gap:10px}
+.block figure{margin:0;display:grid;gap:6px}
+.block .anim{border-radius:10px}
+.block figcaption{font-weight:600;font-size:.95rem}
+.cardio{border:1px dashed var(--acc);border-radius:var(--r);padding:14px 16px;display:grid;gap:6px;background:var(--surface)}
+.cardio b{font-family:var(--display);font-size:1.1rem;text-transform:uppercase;color:var(--acc)}
+
+.rules{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(270px,100%),1fr));gap:12px}
+.rule{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:16px;display:grid;gap:8px;align-content:start}
+.rule ol,.rule ul{margin:0;padding-left:20px;display:grid;gap:6px}
+.rpe{display:flex;border-radius:10px;overflow:hidden;font-variant-numeric:tabular-nums;font-size:.85rem;font-weight:600}
+.rpe div{flex:1;padding:8px 4px;text-align:center;background:var(--bg);border-right:1px solid var(--line)}
+.rpe div:last-child{border-right:0}
+.rpe .ok{background:var(--rumeysa-soft);color:var(--rumeysa)}
+.rpe .stop{background:var(--yasin-soft);color:var(--yasin)}
+.rpe b{display:block;font-family:var(--display);font-size:1.15rem}
+
+.dayclock{list-style:none;margin:0;padding:0;display:flex;flex-wrap:wrap;gap:6px}
+.dayclock li{background:var(--surface);border:1px solid var(--line);border-radius:999px;padding:4px 12px;font-size:.88rem;display:flex;gap:8px;align-items:baseline}
+.dayclock time{font-family:var(--display);font-weight:700;color:var(--acc);font-variant-numeric:tabular-nums}
+.anim.noimg .loading{text-align:center;font-weight:600;font-size:1rem;line-height:1.3}
+.anim.noimg small{font-weight:400;font-size:.8rem;opacity:.8}
+footer{padding:28px 0 44px;border-top:1px solid var(--line);font-size:.9rem;color:var(--muted)}
+footer .wrap{display:grid;gap:6px}
+footer a{color:inherit}
+
+@media (prefers-reduced-motion:reduce){
+  .person-view,.panel{animation:none}
+  .tab-ind,.tab,.person-ind,.person-switch button{transition:none}
+}
+</style>
+</head>
+<body data-person="yasin">
+
+<header>
+  <div class="wrap">
+    <h1>Sabah antrenman planı</h1>
+    <p class="lead">07:00'de salona giriş, en geç 08:30'da çıkış. Aynı saatte girip çıkıyorsunuz ama herkes kendi programını yapıyor. Aşağıdan kişiyi seç; sadece onun programı, varyasyonları ve videoları görünür.</p>
+  </div>
+</header>
+
+<div class="switch-bar">
+  <div class="wrap">
+    <div class="person-switch" role="group" aria-label="Kimin programı">
+      <span class="person-ind" aria-hidden="true"></span>
+      <button type="button" data-p="yasin" aria-pressed="true"><span class="dot"></span>Yasin</button>
+      <button type="button" data-p="rumeysa" aria-pressed="false"><span class="dot"></span>Rümeysa</button>
+    </div>
+  </div>
+</div>
+
+<section>
+  <div class="wrap">
+    <h2>Bir sabah, dakika dakika</h2>
+    <div class="clock">
+      <div class="slot"><time>07:00</time><b>Isınma</b><span>5 dk bisiklet + kalça ve omuz açma</span></div>
+      <div class="slot main"><time>07:10</time><b>Ağırlık</b><span>55 dk · programına göre</span></div>
+      <div class="slot"><time>08:05</time><b>Kondisyon</b><span>10 dk bisiklet aralıklı</span></div>
+      <div class="slot"><time>08:15</time><b>Esneme</b><span>5 dk</span></div>
+      <div class="slot buffer"><time>08:20</time><b>Pay</b><span>Su, soyunma, 08:30'da çıkış</span></div>
+    </div>
+    <p class="muted">İkiniz de aynı saat planını izliyorsunuz; böylece biri bitirip öbürünü beklemiyor. Ağırlık bölümü uzarsa önce kondisyonu kısaltın, 08:30'u aşmayın.</p>
+    <h3>Haftalık düzen</h3>
+    <div class="cal">
+      <table>
+        <thead><tr><th class="row"></th><th>Pzt</th><th>Sal</th><th>Çar</th><th>Per</th><th>Cum</th><th>Cmt</th><th>Paz</th></tr></thead>
+        <tbody>
+          <tr><th class="row">1. hafta</th><td class="gym">Salon</td><td class="walk">Yürüyüş</td><td class="gym">Salon</td><td class="walk">Yürüyüş</td><td class="gym">Salon</td><td class="walk">Yürüyüş</td><td class="gym">Salon</td></tr>
+          <tr><th class="row">2. hafta</th><td class="rest">Dinlen</td><td class="gym">Salon</td><td class="walk">Yürüyüş</td><td class="gym">Salon</td><td class="walk">Yürüyüş</td><td class="gym">Salon</td><td class="rest">Dinlen</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="muted">Gün aşırı salon. Her salon gününde programdaki bir sonraki gün yapılır (A, B, A, B… ya da A, B, C, A…). Tek kural: dün salona gittiysen bugün gitme.</p>
+  </div>
+</section>
+
+<main id="views"></main>
+
+<footer>
+  <div class="wrap">
+    <p>Programlar Ağırsağlam'ın <a href="https://www.agirsaglam.com/fitness-antrenman-programlari/">5×5, 3×5 ve Atlet programları</a> ile <a href="https://www.agirsaglam.com/kadinlar-icin-vucut-gelistirme/">kadınlar için vücut geliştirme rehberi</a> temel alınarak hazırlandı.</p>
+    <p>Videolar MuscleWiki'nin kendi sitesinden oynatılır (musclewiki.com); kişisel kullanım içindir ve internet bağlantısı gerekir.</p>
+  </div>
+</footer>
+
+<script>
+const VBASE = "https://musclewiki.com/api-next/videos/";
+const VID = {
+  f:{"abduction":"female-Machine-machine-hip-abduction-side.mp4","bbrow":"female-barbell-bent-over-row-side.mp4","pendlay":"female-barbell-bent-over-row-side.mp4","pcobra":"https://i.makeagif.com/media/7-26-2016/dmKCgC.mp4","bench":"female-barbell-bench-press-side.mp4","bike":"female-Cardio-stationary-bike-side.mp4","curl":"female-Dumbbells-dumbbell-curl-side.mp4","dbbench":"female-dumbbell-bench-press-side_5wGWrBA.mp4","dbohp":"female-dumbbell-seated-overhead-press-side.mp4","dbrdl":"female-Dumbbells-dumbbell-romanian-deadlift-side.mp4","deadbug":"female-Bodyweight-dead-bug-side.mp4","deadlift":"female-Barbell-barbell-deadlift-side.mp4","facepull":"female-Machine-machine-face-pulls-side.mp4","front":"female-Barbell-barbell-front-squat-olympic-side.mp4","goblet":"female-dumbbell-goblet-squat-side.mp4","hipthrust":"female-Barbell-barbell-hip-thrust-side.mp4","incline":"female-Dumbbells-dumbbell-incline-bench-press-side.mp4","invrow":"female-bodyweight-reverse-row-side.mp4","kickback":"female-Machine-machine-glute-kickback-front.mp4","legpress":"female-Machine-machine-leg-press-side.mp4","legraise":"female-Bodyweight-laying-leg-raises-side.mp4","lunge":"female-Dumbbells-dumbbell-forward-lunge-side.mp4","ohp":"female-Barbell-barbell-overhead-press-side.mp4","plank":"female-Bodyweight-forearm-plank-side.mp4","pulldown":"female-machine-pulldown-front.mp4","pushup":"female-Bodyweight-push-up-side.mp4","rdl":"female-Barbell-barbell-romanian-deadlift-side.mp4","row":"female-machine-seated-cable-row-side.mp4","split":"female-Dumbbells-dumbbell-bulgarian-split-squat-side.mp4","squat":"female-Barbell-barbell-squat-side.mp4","swing":"female-Kettlebells-kettlebell-swing-side.mp4","lateral":"female-Dumbbells-dumbbell-lateral-raise-side.mp4","legcurl":"female-Machine-machine-seated-leg-curl-side.mp4","calf":"female-machine-standing-calf-raises-side.mp4","pushdown":"female-Cables-cable-push-down-side.mp4"},
+  m:{"abduction":"male-Machine-machine-hip-abduction-side.mp4","bbrow":"male-barbell-bent-over-row-side.mp4","pendlay":"male-barbell-bent-over-row-side.mp4","pcobra":"https://i.makeagif.com/media/7-26-2016/dmKCgC.mp4","bench":"male-barbell-bench-press-side_KciuhbB.mp4","bike":"male-Cardio-stationary-bike-side.mp4","curl":"male-Dumbbells-dumbbell-curl-side.mp4","dbbench":"male-dumbbell-bench-press-side_rqe1iTe.mp4","dbohp":"male-dumbbell-seated-overhead-press-side.mp4","dbrdl":"male-Dumbbells-dumbbell-romanian-deadlift-side.mp4","deadbug":"male-Bodyweight-dead-bug-side.mp4","deadlift":"male-Barbell-barbell-deadlift-side.mp4","facepull":"male-Machine-machine-face-pulls-side.mp4","front":"male-Barbell-barbell-front-squat-olympic-side.mp4","goblet":"male-dumbbell-goblet-squat-side.mp4","hipthrust":"male-Barbell-barbell-hip-thrust-side.mp4","incline":"male-Dumbbells-dumbbell-incline-bench-press-side.mp4","invrow":"male-bodyweight-reverse-row-side.mp4","kickback":"male-Machine-machine-glute-kickback-side.mp4","legpress":"male-Machine-machine-leg-press-side.mp4","legraise":"male-Bodyweight-laying-leg-raises-side.mp4","lunge":"male-Dumbbells-dumbbell-forward-lunge-side.mp4","ohp":"male-Barbell-barbell-overhead-press-side.mp4","plank":"male-Bodyweight-forearm-plank-side.mp4","pulldown":"male-machine-pulldown-side.mp4","pushup":"male-Bodyweight-push-up-side.mp4","rdl":"male-Barbell-barbell-romanian-deadlift-side_dnNh5UH.mp4","row":"male-machine-seated-cable-row-side.mp4","split":"male-Dumbbells-dumbbell-bulgarian-split-squat-side.mp4","squat":"male-Barbell-barbell-squat-side.mp4","swing":"male-Kettlebells-kettlebell-swing-side.mp4","lateral":"male-Dumbbells-dumbbell-lateral-raise-side.mp4","legcurl":"male-Machine-machine-seated-leg-curl-side.mp4","calf":"male-machine-standing-calf-raises-side.mp4","pushdown":"male-Cables-cable-push-down-side.mp4"}
+};
+const MW = {"squat":"barbell-squat","goblet":"dumbbell-goblet-squat","front":"barbell-front-squat-olympic","bench":"barbell-bench-press","dbbench":"dumbbell-bench-press","incline":"dumbbell-incline-bench-press","pulldown":"machine-pulldown","hipthrust":"barbell-hip-thrust","plank":"forearm-plank","rdl":"barbell-romanian-deadlift","dbrdl":"dumbbell-romanian-deadlift","deadlift":"barbell-deadlift","ohp":"barbell-overhead-press","dbohp":"dumbbell-seated-overhead-press","row":"machine-seated-cable-row","bbrow":"barbell-bent-over-row","pendlay":"barbell-bent-over-row","invrow":"inverted-row","split":"dumbbell-bulgarian-split-squat","lunge":"dumbbell-forward-lunge","facepull":"machine-face-pulls","curl":"dumbbell-curl","swing":"kettlebell-swing","bike":"stationary-bike","pushup":"push-up","legpress":"machine-leg-press","deadbug":"dead-bug","abduction":"machine-hip-abduction","kickback":"machine-glute-kickback","legraise":"laying-leg-raises","lateral":"dumbbell-lateral-raise","legcurl":"machine-seated-leg-curl","calf":"machine-standing-calf-raises","pushdown":"cable-rope-pushdown"};
+
+const EX = {
+  squat:{n:"Squat",en:"Barbell Squat",tip:"Göğüs dik, diz ayak ucu yönünde. Kalça diz hizasına inene kadar çömel."},
+  goblet:{n:"Goblet Squat",en:"Dambıl göğüste squat",tip:"Dambılı göğsüne yasla, dirseklerin dizlerin içinden geçsin. Squat'ı öğrenmenin en güvenli yolu."},
+  front:{n:"Front Squat",en:"Bar önde squat",tip:"Dirsekler yukarıda, gövde dik. Normal squat'tan hafif başla."},
+  bench:{n:"Bench Press",en:"Barbell Bench Press",tip:"Kürek kemiklerini sık, ayaklar yerde. Bar göğsün alt kısmına insin. Ağır setlerde yanında biri olsun."},
+  dbbench:{n:"Dambıl Bench Press",en:"Dumbbell Bench Press",tip:"Dambıllar göğüs hizasına insin, dirsekler gövdeye 45° açıyla."},
+  incline:{n:"Incline Dambıl Press",en:"Eğimli sehpada press",tip:"Sehpa 30° civarı. Üst göğüs ve omuz önü için."},
+  pulldown:{n:"Lat Pulldown",en:"Önden çekiş",tip:"Barı köprücük kemiğine çek, geriye yatma. Dirsekleri aşağı ve arkaya düşün."},
+  hipthrust:{n:"Hip Thrust",en:"Kalça itişi",tip:"Sırt sehpada, çene içeride. Tepede kalçanı sık, belini değil kalçanı kaldır."},
+  plank:{n:"Plank",en:"Karın ve gövde",tip:"Kulak, omuz, kalça, topuk tek çizgide. Karnını ve kalçanı sık."},
+  rdl:{n:"Romanian Deadlift",en:"RDL",tip:"Dizler hafif kırık, kalçanı geriye it. Bel düz, bar bacağa sürtünerek iner."},
+  dbrdl:{n:"Dambıl RDL",en:"Dambılla Romanian Deadlift",tip:"Arka bacakta gerilme hissedene kadar in. Bel hiç yuvarlanmasın."},
+  deadlift:{n:"Deadlift",en:"Yerden kaldırma",tip:"Bar ayak ortasının üstünde, bel düz. Yeri ayaklarınla it, barı vücuda yakın tut."},
+  ohp:{n:"Overhead Press",en:"Ayakta omuz press",tip:"Kalça ve karın sıkı, bel çukurlaşmasın. Bar yüzüne yakın yukarı çıksın."},
+  dbohp:{n:"Dambıl Omuz Press",en:"Oturarak omuz press",tip:"Sırt destekli otur. Dambıllar kulak hizasından yukarı."},
+  row:{n:"Seated Cable Row",en:"Oturarak kablolu çekiş",tip:"Göğüs dik, tutamağı karnına çek, kürek kemiklerini sık."},
+  bbrow:{n:"Barbell Row",en:"Eğilerek bar çekiş",tip:"Gövde öne eğik, bel düz. Barı karın üstüne çek."},
+  invrow:{n:"Inverted Row",en:"Ters çekiş",tip:"Smith barı ya da TRX ile. Vücut tahta gibi düz, göğsü bara çek."},
+  split:{n:"Bulgarian Split Squat",en:"Arka ayak sehpada",tip:"Ön dizin üstüne çök, gövde hafif öne. Önce vücut ağırlığıyla."},
+  lunge:{n:"Lunge",en:"Öne adımlı çömelme",tip:"Uzun adım, arka diz yere yaklaşsın. Ön diz içe kaçmasın."},
+  facepull:{n:"Face Pull",en:"Yüze çekiş",tip:"İpi alnına doğru çek, elleri iki yana aç. Omuz sağlığı için."},
+  curl:{n:"Biceps Curl",en:"Dambıl curl",tip:"Dirsekler gövdede sabit, sallanma yok."},
+  pushdown:{n:"Triceps Pushdown",en:"Kabloda arka kol",tip:"Dirsekler gövdeye yapışık, sadece ön kol hareket eder."},
+  lateral:{n:"Lateral Raise",en:"Yana açış",tip:"Hafif dambıl, dirsekler hafif kırık. Omuz hizasını geçme. Omuzları geniş gösterir."},
+  legcurl:{n:"Leg Curl",en:"Arka bacak makinesi",tip:"Yavaş indir, kalçayı oturaktan kaldırma."},
+  calf:{n:"Calf Raise",en:"Baldır",tip:"En altta 1 sn bekle, en üstte sık. Zıplama yok."},
+  swing:{n:"Kettlebell Swing",en:"Kalçayla savurma",tip:"Gücü kollardan değil kalçadan al: kalçayı geri it, sonra sert öne it."},
+  bike:{n:"Bisiklet",en:"Sabit bisiklet",tip:"Sprintte 30 sn tam güç, sonra yavaş pedal."},
+  pushup:{n:"Şınav",en:"Push-up",tip:"Zor gelirse dizler yerde ya da eller sehpada başla."},
+  legpress:{n:"Leg Press",en:"Bacak itme",tip:"Bel sırtlığa yapışık kalsın, dizleri tam kilitleme."},
+  deadbug:{n:"Dead Bug",en:"Sırtüstü karın",tip:"Bel yere yapışık. Karşı kol ve bacağı yavaşça uzat."},
+  abduction:{n:"Hip Abduction",en:"Kalça açma makinesi",tip:"Yavaş aç, yavaş kapa. Kalçanın yan tarafını çalıştırır."},
+  kickback:{n:"Glute Kickback",en:"Kalça geri itme",tip:"Bacağı geriye it, beli değil kalçayı kullan."},
+  pendlay:{n:"Pendlay Row",en:"Yerden bar çekiş",tip:"Gövde yere paralel, bel düz. Bar her tekrarda yere iner, oradan patlayıcı çekilir. Videodaki hareket benzeri bent-over row."},
+  pcobra:{n:"Prone Cobra",en:"Yüzüstü sırt açma",tip:"Yüzüstü yat, kolları yanlara aç, avuçlar dışa. Göğsü ve kolları birkaç cm kaldır, kürek kemiklerini sık, 2-3 sn tut. Duruşu düzeltir."},
+  legraise:{n:"Leg Raise",en:"Bacak kaldırma",tip:"Bel yerde sabit, bacakları yavaş indir."}
+};
+
+/* items: [exerciseId, sets, rest, note?, supersetLabel?] */
+const PEOPLE = {
+  yasin:{
+    name:"Yasin", pos:"Yasin'in", g:"m",
+    intro:"Ağırsağlam'ın 3×5 programı, birebir. Ana hareketler 3 set 5 tekrar; her ana hareketin ardından bir yardımcı hareket. Setler arası dinlenmeyi 3 dakikada tutunca (site 5 dakikaya kadar izin veriyor) her gün 08:20'de biter.",
+    facts:[["3×5","Ağırsağlam programı"],["~80 dk","07:00–08:20, çıkış 08:30"],["Deadlift","1×5 ağır + RDL yardımcı"]],
+    variants:[
+      { id:"y1", tab:"3×5", sub:"Ağırsağlam", badge:"Ağırsağlam 3×5",
+        title:"3×5 Programı",
+        desc:"A ve B günleri gün aşırı sırayla döner (A, B, A, B…). Her ana hareketten önce 1-2 hafif ısınma seti. Yardımcı hareketleri en az 4 hafta değiştirme.",
+        pro:"5×5'ten bir sonraki adım: daha az ana set, zayıf halkaları (kalça, arka kol, sırt) güçlendiren yardımcı hareketler. Deadlift ağır kalıyor.",
+        con:"Site, 5×5'te ağırlıklar hâlâ artıyorsa 5×5'e devam etmeyi söylüyor; 3×5'e geçiş işareti ağırlığın artık her antrenmanda artmaması.",
+        cardioLabel:"Kondisyon (haftada en fazla 2 gün)",
+        days:[
+          {name:"Gün A",
+            clock:[["07:00","Isınma"],["07:08","Squat"],["07:21","Bench Press"],["07:33","Pendlay Row"],["07:43","Yardımcılar"],["08:06","Plank"],["08:10","Bisiklet (isteğe bağlı)"],["08:20","Çıkışa hazırlık"]],
+            items:[["squat","3×5","3 dk","Önce 1-2 ısınma seti"],["bench","3×5","3 dk","Önce 1-2 ısınma seti"],["pendlay","3×5","3 dk"],["lunge","3×8-12","2 dk","Squat yardımcısı"],["dbbench","3×8-12","2 dk","Bench yardımcısı"],["pulldown","3×8-12","2 dk","Row yardımcısı"],["plank","2×45 sn","60 sn","Ağırlıklı plank (sırta plaka)"]]},
+          {name:"Gün B",
+            clock:[["07:00","Isınma"],["07:08","Front Squat"],["07:21","Overhead Press"],["07:32","Deadlift"],["07:40","Yardımcılar"],["08:10","Plank"],["08:14","Esneme"],["08:20","Çıkışa hazırlık"]],
+            items:[["front","3×5","3 dk","Önce 1-2 ısınma seti"],["ohp","3×5","3 dk","Önce 1-2 ısınma seti"],["deadlift","1×5","—","Tek ağır set; önce 3-4 ısınma seti"],["rdl","3×5-12","2-3 dk","Deadlift yardımcısı"],["lateral","3×8-12","2 dk","Overhead press yardımcısı"],["dbbench","3×8-12","2 dk","Bench yardımcısı"],["plank","2×45 sn","60 sn","Ağırlıklı plank"]]}
+        ],
+        cardio:"Site haftada en fazla 2 antrenmana kardiyo eklemeyi öneriyor. A günlerinde ağırlıktan sonra 10 dk bisiklet: 30 sn hızlı + 60 sn yavaş. Ayrıca salon dışı günlerde tempolu yürüyüş."
+      }
+    ],
+    rules:[
+      {h:"Ağırlık ne zaman artar? (Ağırsağlam)", list:["<b>Ana hareketler:</b> tüm setler doğru formda bittiyse bir sonraki antrenmanda +2,5 kg.","<b>Deadlift:</b> haftada +5 kg.","Zorlanma 9'u geçtiyse (1 tekrar bile zor kaldıysa) ağırlığı artırma.","3 antrenman üst üste artıramazsan ağırlığı biraz düşür (ör. 120 → 110 kg), yeniden tırman."]},
+      {h:"Yardımcı hareketler", list:["Ağırlık değil tekrar artar: 3×8 → 3×9 → … → 3×12. 3×12'yi yapınca ağırlığı artır, 3×8'e dön.","Başlangıçta zorlanma 7 (3 tekrar kala bırak).","Seçtiğin yardımcıyı en az 4 hafta değiştirme. Sitenin başka seçenekleri: squat için leg extension, row için seated row ya da barfiks, overhead press için face pull, deadlift için rack pull."]},
+      {h:"Neden 08:30'a sığıyor?", list:["Site ana setlerde \"5 dakikaya kadar\" dinlenmeye izin veriyor; 3 dakika bu aralıkta.","Yardımcılarda en fazla 3 dk deniyor; 2 dk yeterli.","Isınmayı kısa tut: 5 dk bisiklet + her harekette 1-2 hafif set.","Zaman daralırsa önce kondisyonu atla, ana hareketlere dokunma."]}
+    ]
+  },
+  rumeysa:{
+    name:"Rümeysa", pos:"Rümeysa'nın", g:"f",
+    info:true,
+    intro:"Ağırsağlam'ın kadınlar için programı, birebir. Haftada 3 gün, gün aşırı. Kalça, bacak ve duruş öncelikli; üst gövde dengeli. İlk haftalarda ağırlıklar hafif, önce hareketi öğren.",
+    facts:[["3 gün","Gün 1, 2, 3 sırayla"],["~55 dk","07:10–08:05"],["Hip thrust","her gün ilk hareket"]],
+    variants:[
+      { id:"r1", tab:"Kadın Programı", sub:"Ağırsağlam", badge:"Ağırsağlam kadın programı",
+        title:"Kadınlar İçin Antrenman Programı",
+        desc:"Gün 1, Gün 2, Gün 3 gün aşırı sırayla döner. Squat goblet squat olarak, deadlift ise Romanian deadlift olarak programda; site ikisini de kadınlar için daha uygun ve öğrenmesi daha kolay türler olarak öneriyor.",
+        pro:"Kalçayı en çok çalıştıran hareketler (hip thrust, RDL, split squat, kickback) her hafta tekrar eder. Kas yavaş gelir; şekil 6-12 ayda belirginleşir.",
+        con:"Ağırlık kaldırmaya alışmak birkaç hafta sürer; ilk haftalarda hafif kas ağrısı normal, birkaç hafta sonra geçer.",
+        days:[
+          {name:"Gün 1", items:[["hipthrust","4×6","2 dk"],["goblet","3×12","90 sn"],["rdl","2×15","90 sn","Deadlift ailesinden"],["pcobra","2×10","60 sn"],["abduction","2×20","60 sn"],["incline","2×10","90 sn"],["pulldown","2×10","90 sn"]]},
+          {name:"Gün 2", items:[["hipthrust","3×10","2 dk"],["split","2×10 / bacak","90 sn"],["kickback","3×10 / bacak","60 sn"],["swing","2×30 sn","60 sn"],["plank","2×90 sn","60 sn"],["legraise","3×10","60 sn"],["pushup","2×max","60 sn","Zorsa dizler yerde"],["row","2×10","90 sn"]]},
+          {name:"Gün 3", items:[["hipthrust","3×20","90 sn"],["legpress","3×10","90 sn"],["rdl","2×8","2 dk","Bu gün daha ağır"],["abduction","2×20","60 sn"],["dbbench","2×15","90 sn"],["invrow","2×10","90 sn"],["ohp","2×10","90 sn"]]}
+        ],
+        cardio:"Site kardiyoyu şart görmüyor: zayıf ama yağlıysan haftada 1-2 gün yeterli. Salon günü 10 dk sakin bisiklet; salon dışı günlerde tempolu yürüyüş."
+      }
+    ],
+    rules:[
+      {h:"İlk haftalar", list:["Site: birden yoğun programa girme, basit adımlarla başla. İlk 2 hafta ağırlıklar çok kolay hissettirmeli.","Her hareketin videosunu salondan önce izle; site de \"videoların sıkı bir öğrencisi olun\" diyor.","Goblet squat ve RDL'de bel düz; hareket kalçadan başlar, belden değil."]},
+      {h:"Ağırlık ne zaman artar?", list:["Site bu program için ayrı kural vermiyor; 3×5'teki yardımcı hareket kuralı uygulanır: önce tekrar artar, aralığın üstüne çıkınca küçük adımla ağırlık eklenir.","Zorlanma 7-8: setin sonunda 2-3 tekrar daha yapabilecek kadar.","Hip thrust'ta artış en hızlı olur."]},
+      {h:"Neyle ölçülür?", list:["Tartıyla değil: mezura (bel, kalça), ayna ve kaldırdığın ağırlık.","Site hedef olarak %15-25 yağ oranını \"gayet iyi\" sayıyor."]}
+    ]
+  }
+};
+
+const esc = s => String(s).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const PLAY = '<svg viewBox="0 0 16 16" aria-hidden="true"><path fill="currentColor" d="M4 2.5v11l9-5.5z"/></svg>';
+const video = (id, g, extra="") => !VID[g][id] ? `<div class="anim noimg"><span class="loading">${esc(EX[id].n)}<br><small>Bu hareketin videosu yok; tarif aşağıda</small></span>${extra}</div>` : `<div class="anim"><span class="loading">Video yükleniyor…</span><video muted loop playsinline preload="none" data-src="${/^https?:/.test(VID[g][id])?"":VBASE}${VID[g][id]}" aria-label="${esc(EX[id].n)} hareketini gösteren video"></video>${extra}</div>`;
+const guide = (id, g) => MW[id] ? `<a class="vid" href="https://musclewiki.com/tr-tr/exercise/${MW[id]}?model=${g}" target="_blank" rel="noopener">${PLAY}Türkçe anlatım</a>` : "";
+
+function card([id, sets, rest, note, ss], i, g){
+  const ssTag = note && /^Süperset/.test(note) ? `<span class="ss">${esc(note)}</span>` : "";
+  const noteTxt = note && !/^Süperset/.test(note) ? `<br><b>Not:</b> ${esc(note)}` : (ssTag ? `<br><b>${esc(note)}:</b> aynı etiketli iki hareketi arka arkaya yap, sonra dinlen.` : "");
+  return `<article class="card">${video(id, g, `<span class="num">${i+1}</span>${ssTag}`)}
+    <div class="body"><h3>${esc(EX[id].n)}<small>${esc(EX[id].en)}</small></h3>
+      <div class="set"><span class="val">${esc(sets)}</span><span class="rest">dinlenme: ${esc(rest)}</span></div>
+      <p class="tip">${esc(EX[id].tip)}${noteTxt}</p>
+      ${guide(id, g)}
+    </div></article>`;
+}
+const block = (b, g) => `<div class="block"><h3>${esc(b.t)}</h3><div class="mini">${b.items.map(([id,val]) => `<figure>${video(id, g)}<figcaption>${esc(EX[id].n)} · ${esc(val)}</figcaption></figure>`).join("")}</div></div>`;
+function dayHtml(d, v, g){
+  let h = d.clock ? `<ol class="dayclock">${d.clock.map(([t,x])=>`<li><time>${t}</time>${esc(x)}</li>`).join("")}</ol>` : "";
+  if (d.items) h += `<div class="cards">${d.items.map((it,i)=>card(it,i,g)).join("")}</div>`;
+  if (d.blocks) h += d.blocks.map(b=>block(b,g)).join("");
+  h += `<div class="cardio"><b>${esc(v.cardioLabel||"08:05 · Kondisyon")}</b><span>${esc(v.cardio)}</span></div>`;
+  return h;
+}
+
+function moveInd(tabs){
+  const sel = tabs.querySelector('[aria-selected="true"]'), ind = tabs.querySelector(".tab-ind");
+  if (!sel || !ind || !sel.offsetWidth) return;
+  ind.style.width = sel.offsetWidth + "px";
+  ind.style.transform = `translateX(${sel.offsetLeft}px)`;
+}
+function makeTabs(container, panelsEl, items, render){
+  items.forEach((it, i) => {
+    const b = document.createElement("button");
+    b.className = "tab"; b.type = "button"; b.setAttribute("role","tab"); b.id = it.key + "-tab";
+    b.setAttribute("aria-controls", it.key + "-panel"); b.innerHTML = it.label;
+    b.addEventListener("click", () => select(i));
+    container.appendChild(b);
+    const p = document.createElement("div");
+    p.className = "panel"; p.id = it.key + "-panel"; p.setAttribute("role","tabpanel");
+    p.setAttribute("aria-labelledby", b.id); p.hidden = true; p.innerHTML = render(it);
+    panelsEl.appendChild(p);
+  });
+  container.addEventListener("keydown", e => {
+    if (!["ArrowLeft","ArrowRight"].includes(e.key)) return;
+    const btns = [...container.querySelectorAll(".tab")];
+    const cur = btns.findIndex(x => x.getAttribute("aria-selected")==="true");
+    const nxt = (cur + (e.key==="ArrowRight"?1:-1) + btns.length) % btns.length;
+    select(nxt); btns[nxt].focus();
+  });
+  function select(i){
+    [...container.querySelectorAll(".tab")].forEach((b,j) => { b.setAttribute("aria-selected", j===i); b.tabIndex = j===i?0:-1; });
+    [...panelsEl.children].forEach((p,j) => p.hidden = j!==i);
+    refreshInds();
+  }
+  return select;
+}
+function refreshInds(){ requestAnimationFrame(() => document.querySelectorAll(".tabs").forEach(moveInd)); }
+
+const views = document.getElementById("views");
+for (const [pid, P] of Object.entries(PEOPLE)){
+  const sec = document.createElement("div");
+  sec.className = "person-view"; sec.id = "view-" + pid; sec.hidden = pid !== "yasin";
+  sec.innerHTML = `
+    <section><div class="wrap">
+      <div class="who-head"><h2 class="name">${esc(P.pos)} programı</h2><p class="lead">${esc(P.intro)}</p></div>${P.info?`<div id="info-${pid}" class="info-slot"></div>`:""}
+      <div class="facts">${P.facts.map(([a,b])=>`<div class="fact"><b>${esc(a)}</b><span>${esc(b)}</span></div>`).join("")}</div>
+    </div></section>
+    <section><div class="wrap">
+      <h2>Varyasyonlar</h2>
+      <div class="tabs var-tabs" role="tablist" aria-label="${esc(P.name)} varyasyonları"><span class="tab-ind" aria-hidden="true"></span></div>
+      <div class="var-panels"></div>
+    </div></section>
+    <section><div class="wrap">
+      <h2>Kurallar</h2>
+      <div class="rules">
+        ${P.rules.map(r=>`<div class="rule"><h3>${esc(r.h)}</h3><ul>${r.list.map(x=>`<li>${x}</li>`).join("")}</ul></div>`).join("")}
+        <div class="rule"><h3>Zorlanma ölçeği (RPE)</h3><p class="muted">Setin sonunda kaç tekrar daha yapabilirdin?</p>
+          <div class="rpe" role="img" aria-label="RPE 6: 4 tekrar kaldı, 7: 3, 8: 2, 9: 1, 10: hiç. Hedef 7-8."><div><b>6</b>4 kaldı</div><div class="ok"><b>7</b>3 kaldı</div><div class="ok"><b>8</b>2 kaldı</div><div class="stop"><b>9</b>1 kaldı</div><div class="stop"><b>10</b>bitti</div></div>
+          <p>Hedef yeşil bölge. Seti asla zorla son tekrara kadar götürme.</p></div>
+        <div class="rule"><h3>Beslenme ve uyku</h3><ul>
+          <li><b>Kalori:</b> günlük ihtiyacın 300-500 kcal altı; haftada kilonun %0,5'i kadar kayıp yeter.</li>
+          <li><b>Protein:</b> kilo başına 1,6-2 g. Her öğünde bir avuç protein.</li>
+          <li><b>Uyku:</b> 7-9 saat. Sabah 7 antrenmanı için en geç 23:00'te yatakta ol.</li></ul></div>
+      </div>
+    </div></section>`;
+  if (P.variants.length===1) { sec.querySelector(".var-tabs").hidden = true; sec.querySelector(".var-tabs").previousElementSibling.textContent = "Program"; }
+  views.appendChild(sec);
+  makeTabs(sec.querySelector(".var-tabs"), sec.querySelector(".var-panels"),
+    P.variants.map(v => ({key:v.id, label:`${esc(v.tab)}<small>${esc(v.sub)}</small>`, v})),
+    ({v}) => `${v.badge?`<span class="badge">${esc(v.badge)}</span>`:""}<h3 style="font-size:1.6rem">${esc(v.title)}</h3><p class="lead">${esc(v.desc)}</p>
+      <div class="procon"><div><b>Artısı</b>${esc(v.pro)}</div><div><b>Bedeli</b>${esc(v.con)}</div></div>
+      <div class="tabs day-tabs" role="tablist" aria-label="Antrenman günü"><span class="tab-ind" aria-hidden="true"></span></div>
+      <div class="day-panels"></div>`
+  )(0);
+  sec.querySelectorAll(".var-panels > .panel").forEach((p, vi) => {
+    const v = P.variants[vi];
+    makeTabs(p.querySelector(".day-tabs"), p.querySelector(".day-panels"),
+      v.days.map((d, di) => ({key:`${v.id}-d${di}`, label:esc(d.name), d})),
+      ({d}) => dayHtml(d, v, P.g))(0);
+  });
+}
+
+/* Person switch */
+function setPerson(pid, push){
+  if (!PEOPLE[pid]) pid = "yasin";
+  document.body.dataset.person = pid;
+  document.querySelectorAll(".person-switch button").forEach(b => b.setAttribute("aria-pressed", b.dataset.p === pid));
+  document.querySelectorAll(".person-view").forEach(s => s.hidden = s.id !== "view-" + pid);
+  document.querySelectorAll(".person-view[hidden] video").forEach(v => v.pause());
+  if (push) history.replaceState(null, "", "#" + pid);
+  try { localStorage.setItem("kisi", pid); } catch(e){}
+  refreshInds();
+}
+document.querySelectorAll(".person-switch button").forEach(b => b.addEventListener("click", () => setPerson(b.dataset.p, true)));
+setPerson(location.hash.slice(1) || (()=>{ try { return localStorage.getItem("kisi"); } catch(e){ return null; } })() || "yasin", false);
+addEventListener("hashchange", () => setPerson(location.hash.slice(1), false));
+
+/* Lazy video playback */
+const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
+const io = "IntersectionObserver" in window ? new IntersectionObserver(es => es.forEach(en => {
+  const v = en.target;
+  if (en.isIntersecting){
+    if (!v.src){ v.src = v.dataset.src; v.addEventListener("loadeddata", () => v.previousElementSibling?.remove(), {once:true}); }
+    if (!reduce) v.play().catch(()=>{});
+  } else v.pause();
+}), {rootMargin:"200px"}) : null;
+document.querySelectorAll("video[data-src]").forEach(v => {
+  if (io) io.observe(v); else v.src = v.dataset.src;
+  v.addEventListener("click", () => v.paused ? v.play() : v.pause());
+});
+addEventListener("resize", refreshInds);
+document.fonts && document.fonts.ready.then(refreshInds);
+</script>
+<script>
+/* Rümeysa için görsel bilgi bölümü: "iri olur muyum?" — inline SVG + CSS animasyon, kütüphane yok. */
+(function () {
+  "use strict";
+
+  var SRC1 = "https://www.agirsaglam.com/kadinlar-icin-vucut-gelistirme/";
+  var SRC2 = "https://www.agirsaglam.com/kadinlar-icin-incelme/";
+
+  /* ---------- CSS (her seçici #info-rumeysa altında; & -> #info-rumeysa) ---------- */
+  var CSS = `
+&{display:block;margin:6px 0 10px;color:var(--ink);font-family:var(--body)}
+& *{box-sizing:border-box}
+& .rb-title{font-family:var(--display);font-weight:800;text-transform:uppercase;font-size:clamp(1.7rem,6vw,2.4rem);line-height:1.05;margin:0 0 14px;color:var(--rumeysa);text-wrap:balance}
+& .rb-grid{display:grid;grid-template-columns:1fr;gap:14px;max-width:940px}
+@media (min-width:720px){& .rb-grid{grid-template-columns:1fr 1fr}& .rb-full{grid-column:1/-1}}
+& .rb-card{position:relative;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:20px;display:grid;gap:12px;align-content:start;min-width:0;overflow:hidden}
+& .rb-kick{display:flex;align-items:center;gap:8px;font-family:var(--display);font-weight:700;font-size:.95rem;letter-spacing:.08em;text-transform:uppercase;color:var(--rumeysa)}
+& .rb-kick i{font-style:normal;display:inline-grid;place-items:center;width:24px;height:24px;border-radius:50%;background:var(--rumeysa);color:var(--surface);font-size:.85rem;letter-spacing:0}
+& .rb-big{font-family:var(--display);font-weight:800;line-height:1;margin:0}
+& .rb-cap{font-family:var(--display);font-weight:700;font-size:clamp(1.25rem,4.4vw,1.55rem);line-height:1.12;margin:0;text-wrap:balance}
+& .rb-cap em{font-style:normal;color:var(--rumeysa)}
+& .rb-cap s{color:var(--yasin);text-decoration-thickness:3px}
+& .rb-q{margin:0;padding:8px 12px;border-left:3px solid var(--rumeysa);background:var(--rumeysa-soft);border-radius:0 10px 10px 0;font-size:.95rem;line-height:1.4}
+& .rb-q q{quotes:"\\201C" "\\201D";font-weight:600}
+& .rb-q cite{display:block;font-style:normal;font-size:.75rem;color:var(--muted);margin-top:2px}
+& .rb-tag{justify-self:start;font-size:.7rem;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:var(--muted);border:1px solid var(--line);border-radius:999px;padding:1px 9px}
+& .rb-tag.rb-corner{position:absolute;top:16px;right:16px}
+& svg{display:block;width:100%;height:auto;overflow:visible}
+& .rb-t{font-family:var(--display);font-weight:700;fill:var(--ink)}
+& .rb-s{font-family:var(--body);font-weight:500;fill:var(--muted)}
+
+/* animasyon temeli: JS yoksa / hareket azaltılmışsa her şey son halinde görünür */
+& .rb-a{transition:opacity .45s ease-out calc(var(--i,0)*90ms),transform .45s ease-out calc(var(--i,0)*90ms)}
+&.rb-js .rb-card:not(.rb-in) .rb-a{opacity:0;transform:translateY(10px)}
+& .rb-draw{stroke-dasharray:1;stroke-dashoffset:0;transition:stroke-dashoffset 1.2s ease-out calc(var(--i,0)*120ms)}
+&.rb-js .rb-card:not(.rb-in) .rb-draw{stroke-dashoffset:1}
+
+/* 1 hero */
+& .rb-hero{background:linear-gradient(135deg,var(--rumeysa-soft),var(--surface) 70%);padding:22px}
+& .rb-hero-in{display:grid;grid-template-columns:minmax(0,1fr) 150px;gap:10px;align-items:center}
+& .rb-hero h3{font-family:var(--display);font-weight:800;text-transform:uppercase;line-height:.98;margin:0;font-size:clamp(2rem,9vw,3.6rem);text-wrap:balance}
+& .rb-hero h3 .l1{display:block;color:var(--muted)}
+& .rb-hero h3 .l2{display:block;color:var(--rumeysa)}
+& .rb-hero .rb-ghost{fill:none;stroke:var(--yasin);stroke-width:2;stroke-dasharray:5 5;transform-origin:60px 120px;transform:scaleX(1.5);opacity:.4;transition:opacity .6s ease-out .6s,transform .8s ease-out .6s}
+&.rb-js .rb-hero:not(.rb-in) .rb-ghost{opacity:0;transform:scaleX(1.5)}
+& .rb-hero .rb-fig{fill:var(--rumeysa-soft);stroke:var(--rumeysa);stroke-width:3;stroke-linejoin:round;stroke-dasharray:1;stroke-dashoffset:0;transition:stroke-dashoffset 1.2s ease-out .2s,fill .6s ease-out 1s}
+&.rb-js .rb-hero:not(.rb-in) .rb-fig{stroke-dashoffset:1;fill:transparent}
+& .rb-hero .rb-no{stroke:var(--yasin);stroke-width:4;stroke-linecap:round;stroke-dasharray:1;stroke-dashoffset:0;transition:stroke-dashoffset .4s ease-out 1.1s}
+&.rb-js .rb-hero:not(.rb-in) .rb-no{stroke-dashoffset:1}
+& .rb-hero .rb-lbl{opacity:1;transition:opacity .4s ease-out 1.4s}
+&.rb-js .rb-hero:not(.rb-in) .rb-lbl{opacity:0}
+@media (max-width:420px){& .rb-hero-in{grid-template-columns:minmax(0,1fr) 112px}}
+
+/* 2 testosteron */
+& .rb-bars{display:grid;grid-template-columns:1fr 1fr;gap:18px;align-items:end;height:190px;padding:0 6px;border-bottom:2px solid var(--line)}
+& .rb-bcol{display:flex;height:100%;align-items:flex-end;justify-content:center}
+& .rb-bwrap{display:flex;align-items:flex-end;justify-content:center;width:100%}
+& .rb-bar{width:min(86px,70%);border-radius:10px 10px 0 0;transform-origin:50% 100%;transition:transform .8s ease-out calc(var(--i,0)*250ms)}
+&.rb-js .rb-card:not(.rb-in) .rb-bar{transform:scaleY(0)}
+& .rb-bar.m{height:180px;background:var(--muted)}
+& .rb-bar.w{height:13px;background:var(--rumeysa)}
+& .rb-bnum{font-family:var(--display);font-weight:800;font-size:1.6rem;line-height:1}
+& .rb-blab{display:grid;grid-template-columns:1fr 1fr;gap:18px;padding:0 6px;text-align:center;font-family:var(--display);font-weight:700;text-transform:uppercase;letter-spacing:.05em;font-size:.95rem}
+& .rb-x{font-family:var(--display);font-weight:800;color:var(--rumeysa);font-size:clamp(2.6rem,12vw,3.6rem);line-height:1}
+& .rb-x small{font-size:.38em;color:var(--muted);font-weight:700;margin-left:6px;letter-spacing:.04em;text-transform:uppercase}
+
+/* 3 zaman çizgisi */
+& .rb-dur-ring{transform-box:fill-box;transform-origin:center}
+& .rb-in .rb-dur-ring{animation:rb-pulse 2s ease-out 1.6s infinite}
+@keyframes rb-pulse{0%{transform:scale(1);opacity:.6}100%{transform:scale(2.4);opacity:0}}
+& .rb-tl-pg{transition-duration:1.2s}
+& .rb-dur{transition:opacity .4s ease-out 1.1s,transform .4s ease-out 1.1s;transform-box:fill-box;transform-origin:center}
+&.rb-js .rb-card:not(.rb-in) .rb-dur{opacity:0;transform:scale(.4)}
+
+/* 4 terazi */
+& .rb-beam{transform-origin:160px 50px;transform:rotate(10deg);transition:transform 1s cubic-bezier(.2,.9,.3,1.2) .3s}
+&.rb-js .rb-card:not(.rb-in) .rb-beam{transform:rotate(0)}
+& .rb-pl{transform:translateY(-12px);transition:transform 1s cubic-bezier(.2,.9,.3,1.2) .3s}
+& .rb-pr{transform:translateY(12px);transition:transform 1s cubic-bezier(.2,.9,.3,1.2) .3s}
+&.rb-js .rb-card:not(.rb-in) .rb-pl,&.rb-js .rb-card:not(.rb-in) .rb-pr{transform:translateY(0)}
+
+/* 5 yağ */
+& .rb-shrink{transform-origin:60px 112px;transform:scale(.84);transition:transform 1s ease-out .5s}
+&.rb-js .rb-card:not(.rb-in) .rb-shrink{transform:scale(1)}
+& .rb-in .rb-nudge{animation:rb-nudge 1.6s ease-in-out 1.4s infinite}
+@keyframes rb-nudge{0%,100%{transform:translateX(0)}50%{transform:translateX(var(--dx,4px))}}
+
+/* 6 grafik */
+& .rb-legend{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:.88rem;font-weight:600}
+& .rb-legend span{display:inline-flex;align-items:center;gap:7px}
+& .rb-legend i{width:18px;height:5px;border-radius:3px;display:inline-block}
+
+/* 7 karşılaştırma */
+& .rb-cmp{display:grid;grid-template-columns:1fr;gap:12px}
+@media (min-width:560px){& .rb-cmp{grid-template-columns:1fr 1fr}}
+& .rb-col{border-radius:12px;padding:14px;display:grid;gap:8px;align-content:start;border:1px solid var(--line)}
+& .rb-col.bad{background:color-mix(in srgb,var(--yasin) 7%,var(--surface));border-color:color-mix(in srgb,var(--yasin) 28%,var(--line))}
+& .rb-col.good{background:var(--rumeysa-soft);border-color:color-mix(in srgb,var(--rumeysa) 40%,var(--line))}
+& .rb-colh{display:flex;align-items:center;gap:10px;font-family:var(--display);font-weight:800;text-transform:uppercase;font-size:1.25rem;letter-spacing:.03em}
+& .bad .rb-colh{color:var(--yasin)}
+& .good .rb-colh{color:var(--rumeysa)}
+& .rb-it{display:grid;grid-template-columns:34px 1fr;gap:10px;align-items:center;padding:8px 0;border-top:1px solid color-mix(in srgb,var(--ink) 9%,transparent);font-weight:600;line-height:1.25}
+& .rb-it b{display:block;font-weight:600}
+& .rb-it small{display:block;font-size:.72rem;font-weight:500;color:var(--muted);margin-top:2px}
+& .bad .rb-it{color:var(--muted)}
+& .rb-ic{width:34px;height:34px;border-radius:10px;display:grid;place-items:center;position:relative}
+& .bad .rb-ic{background:color-mix(in srgb,var(--yasin) 14%,transparent);color:var(--yasin)}
+& .good .rb-ic{background:color-mix(in srgb,var(--rumeysa) 18%,transparent);color:var(--rumeysa)}
+& .rb-ic svg{width:20px;height:20px}
+& .rb-mark{position:absolute;right:-5px;bottom:-5px;width:16px;height:16px;border-radius:50%;display:grid;place-items:center;font-size:.7rem;font-weight:800;line-height:1;color:#fff;font-family:var(--body)}
+& .bad .rb-mark{background:var(--yasin)}
+& .good .rb-mark{background:var(--rumeysa);color:var(--surface)}
+
+/* 8 gösterge */
+& .rb-gauge-wrap{max-width:420px;margin:0 auto;width:100%}
+& .rb-needle{transform-origin:160px 140px;transform:rotate(0);transition:transform 1.1s cubic-bezier(.2,.9,.3,1.15) .5s}
+&.rb-js .rb-card:not(.rb-in) .rb-needle{transform:rotate(-90deg)}
+& .rb-band{stroke-dasharray:1;stroke-dashoffset:0;transition:stroke-dashoffset 1s ease-out .2s}
+&.rb-js .rb-card:not(.rb-in) .rb-band{stroke-dashoffset:1}
+& .rb-close{background:var(--rumeysa);color:var(--surface);text-align:center;border-radius:12px;padding:16px;font-family:var(--display);font-weight:800;text-transform:uppercase;font-size:clamp(1.35rem,5.4vw,1.9rem);line-height:1.1;text-wrap:balance}
+& .rb-close span{display:block;opacity:.85}
+& .rb-src{max-width:940px;margin:12px 0 0;font-size:.8rem;color:var(--muted);line-height:1.5}
+& .rb-src a{color:var(--rumeysa);font-weight:600}
+
+@media (prefers-reduced-motion:reduce){
+  & *{transition:none!important;animation:none!important}
+}
+`.replace(/&/g, "#info-rumeysa");
+
+  /* ---------- yardımcılar ---------- */
+  function q(text) {
+    return '<p class="rb-q"><q>' + text + '</q><cite>— Ağırsağlam</cite></p>';
+  }
+  var FIG =
+    '<circle cx="60" cy="30" r="13"/>' +
+    '<path d="M52 50C44 54 36 56 34 64C34 80 44 92 46 104C46 116 36 128 38 142L42 190L54 190L58 150L62 150L66 190L78 190L82 142C84 128 74 116 74 104C76 92 86 80 86 64C84 56 76 54 68 50Z"/>';
+
+  /* küçük ikonlar (24x24, currentColor) */
+  var IC = {
+    reps: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h16M4 12h16M4 16h16"/><path d="M8 5v14M16 5v14" opacity=".35"/></svg>',
+    sweat: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3C8 9 6 12 6 15a6 6 0 0 0 12 0c0-3-2-6-6-12z"/></svg>',
+    spot: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3.5"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg>',
+    loop: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3l3 3-3 3"/><path d="M4 11V9a3 3 0 0 1 3-3h13"/><path d="M7 21l-3-3 3-3"/><path d="M20 13v2a3 3 0 0 1-3 3H4"/></svg>',
+    dumb: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 7v10M17 7v10M3.5 10v4M20.5 10v4M7 12h10"/></svg>',
+    up: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 18l6-6 4 4 6-8"/><path d="M15 8h5v5"/></svg>',
+    hip: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 18h4l3-6h6l2 6h3"/><circle cx="8" cy="8" r="2"/><path d="M3 21h18"/></svg>',
+    ruler: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="8" width="20" height="8" rx="2"/><path d="M6 8v3M10 8v4M14 8v3M18 8v4"/></svg>'
+  };
+  function item(i, ic, txt, sub, mark) {
+    return '<div class="rb-it rb-a" style="--i:' + i + '"><span class="rb-ic">' + IC[ic] +
+      '<span class="rb-mark">' + mark + '</span></span><span><b>' + txt + '</b>' + (sub ? '<small>' + sub + '</small>' : '') + '</span></div>';
+  }
+
+  /* ---------- gösterge geometrisi: 0-40% -> yarım daire ---------- */
+  function gpt(v, r) {
+    var th = Math.PI - Math.PI * v / 40;
+    return [(160 + r * Math.cos(th)).toFixed(1), (140 - r * Math.sin(th)).toFixed(1)];
+  }
+  var g15 = gpt(15, 110), g25 = gpt(25, 110);
+  var l15 = gpt(15, 128), l25 = gpt(25, 128);
+
+  /* ---------- işaretleme ---------- */
+  function html() {
+    var h = "";
+    h += '<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false"><defs><g id="rb-fig">' + FIG + '</g></defs></svg>';
+    h += '<h3 class="rb-title">Önce şunu konuşalım: iri olur muyum?</h3>';
+    h += '<div class="rb-grid">';
+
+    /* 1 HERO */
+    h += '<article class="rb-card rb-full rb-hero"><div class="rb-hero-in">' +
+      '<h3><span class="l1 rb-a" style="--i:0">Ağırlık seni iri yapmaz.</span><span class="l2 rb-a" style="--i:3">Şekil verir.</span></h3>' +
+      '<svg viewBox="0 0 120 200" role="img" aria-label="Sıkı ve şekilli figür; iri siluet çarpı ile iptal">' +
+      '<g class="rb-ghost-g"><g class="rb-ghost" stroke-linejoin="round"><use href="#rb-fig"/></g></g>' +
+      '<g class="rb-fig-g"><circle class="rb-fig" pathLength="1" cx="60" cy="30" r="13"/><path class="rb-fig" pathLength="1" d="M52 50C44 54 36 56 34 64C34 80 44 92 46 104C46 116 36 128 38 142L42 190L54 190L58 150L62 150L66 190L78 190L82 142C84 128 74 116 74 104C76 92 86 80 86 64C84 56 76 54 68 50Z"/></g>' +
+      '<g class="rb-lbl"><path class="rb-no" pathLength="1" d="M8 70L32 94M32 70L8 94"/>' +
+      '<text class="rb-t" x="6" y="112" font-size="13" fill="var(--yasin)" style="fill:var(--yasin)">iri</text>' +
+      '<text class="rb-t" x="76" y="198" font-size="13" style="fill:var(--rumeysa)">şekilli</text></g>' +
+      '</svg></div></article>';
+
+    /* 2 HORMON */
+    h += '<article class="rb-card"><div class="rb-kick"><i>2</i>Hormon gerçeği</div>' +
+      '<div class="rb-x rb-a" style="--i:0">10–20×<small>testosteron farkı</small></div>' +
+      '<div class="rb-bars" role="img" aria-label="Erkekte kadına göre yaklaşık 10-20 kat daha fazla testosteron">' +
+      '<div class="rb-bcol"><div class="rb-bwrap"><div class="rb-bar m" style="--i:0"></div></div></div>' +
+      '<div class="rb-bcol"><div class="rb-bwrap"><div class="rb-bar w" style="--i:1"></div></div></div></div>' +
+      '<div class="rb-blab"><span>Erkek</span><span style="color:var(--rumeysa)">Sen</span></div>' +
+      '<p class="rb-cap rb-a" style="--i:4">Bu yakıtla <em>iri</em> olmak zor.</p>' +
+      q("Kadınlar doping kullanımı olmadan erkeklerdeki gibi kas geliştiremezler.") +
+      '<span class="rb-tag">genel bilgi: yaklaşık, göreli ölçek</span></article>';
+
+    /* 3 YAVAŞ */
+    var x8 = 20 + 280 * 8 / 12;
+    h += '<article class="rb-card"><div class="rb-kick"><i>3</i>Kas yavaş büyür</div>' +
+      '<div class="rb-big rb-a" style="--i:0;font-size:clamp(2.6rem,12vw,3.6rem);color:var(--rumeysa)">6–12 ay</div>' +
+      '<svg viewBox="0 0 320 130" role="img" aria-label="0 ile 12 ay arası zaman çizgisi; 6-12 ay disiplinli çalışma; beğendiğin noktada dur">' +
+      '<rect x="160" y="50" width="140" height="20" rx="10" fill="var(--rumeysa-soft)"/>' +
+      '<line x1="20" y1="60" x2="300" y2="60" stroke="var(--line)" stroke-width="6" stroke-linecap="round"/>' +
+      '<path class="rb-draw rb-tl-pg" pathLength="1" d="M20 60H' + x8.toFixed(1) + '" stroke="var(--rumeysa)" stroke-width="6" stroke-linecap="round" fill="none"/>' +
+      '<path d="M' + x8.toFixed(1) + ' 60H300" stroke="var(--muted)" stroke-width="2" stroke-dasharray="3 5" stroke-linecap="round" opacity=".6"/>' +
+      ['0', '3', '6', '9', '12 ay'].map(function (t, k) {
+        var x = 20 + k * 70;
+        return '<line x1="' + x + '" y1="74" x2="' + x + '" y2="82" stroke="var(--muted)" stroke-width="2"/>' +
+          '<text class="rb-t" x="' + x + '" y="98" font-size="13" text-anchor="' + (k === 4 ? "end" : "middle") + '">' + t + '</text>';
+      }).join("") +
+      '<text class="rb-s" x="230" y="43" font-size="11" text-anchor="middle">disiplinli çalışma</text>' +
+      '<g class="rb-dur"><circle class="rb-dur-ring" cx="' + x8.toFixed(1) + '" cy="60" r="9" fill="var(--yasin)" opacity=".5"/>' +
+      '<circle cx="' + x8.toFixed(1) + '" cy="60" r="11" fill="var(--yasin)"/>' +
+      '<path d="M' + (x8 - 3.5).toFixed(1) + ' 55v10M' + (x8 + 3.5).toFixed(1) + ' 55v10" stroke="#fff" stroke-width="3" stroke-linecap="round"/>' +
+      '<text class="rb-t" x="' + x8.toFixed(1) + '" y="30" font-size="17" text-anchor="middle" style="fill:var(--yasin)">DUR</text>' +
+      '<text class="rb-s" x="' + x8.toFixed(1) + '" y="122" font-size="11" text-anchor="middle">beğendiğin nokta</text></g>' +
+      '</svg>' +
+      '<p class="rb-cap rb-a" style="--i:5">Bir gecede iri olunmaz. <em>Beğendiğin yerde dur</em> — orada kalırsın.</p>' +
+      q("dolgun bir fizik için en az 1 yıl") + '</article>';
+
+    /* 4 TERAZİ */
+    h += '<article class="rb-card"><div class="rb-kick"><i>4</i>Asıl hacim yapan</div>' +
+      '<svg viewBox="0 0 320 175" role="img" aria-label="Terazi: dambıl şekil verir, fazla kalori hacim yapar">' +
+      '<rect x="120" y="162" width="80" height="8" rx="4" fill="var(--line)"/>' +
+      '<line x1="160" y1="50" x2="160" y2="162" stroke="var(--muted)" stroke-width="5" stroke-linecap="round"/>' +
+      '<g class="rb-beam"><line x1="90" y1="50" x2="230" y2="50" stroke="var(--ink)" stroke-width="6" stroke-linecap="round"/><circle cx="160" cy="50" r="7" fill="var(--rumeysa)"/></g>' +
+      /* sol kefe: dambıl */
+      '<g class="rb-pl"><path d="M90 50L66 98M90 50L114 98" stroke="var(--muted)" stroke-width="2"/>' +
+      '<path d="M56 98h68a0 0 0 0 1 0 0c0 10-12 16-34 16s-34-6-34-16z" fill="var(--rumeysa-soft)" stroke="var(--rumeysa)" stroke-width="2.5"/>' +
+      '<g stroke="var(--rumeysa)" stroke-width="3" stroke-linecap="round" fill="var(--rumeysa)"><line x1="72" y1="90" x2="108" y2="90"/><rect x="66" y="78" width="8" height="24" rx="3"/><rect x="106" y="78" width="8" height="24" rx="3"/><rect x="60" y="83" width="5" height="14" rx="2"/><rect x="115" y="83" width="5" height="14" rx="2"/></g></g>' +
+      /* sağ kefe: tabak */
+      '<g class="rb-pr"><path d="M230 50L206 98M230 50L254 98" stroke="var(--muted)" stroke-width="2"/>' +
+      '<path d="M196 98h68c0 10-12 16-34 16s-34-6-34-16z" fill="color-mix(in srgb,var(--yasin) 16%,var(--surface))" stroke="var(--yasin)" stroke-width="2.5"/>' +
+      '<ellipse cx="230" cy="80" rx="20" ry="9" fill="var(--yasin)" opacity=".85"/><circle cx="218" cy="70" r="8" fill="var(--yasin)"/><circle cx="238" cy="68" r="9" fill="var(--yasin)" opacity=".7"/><circle cx="228" cy="62" r="7" fill="var(--yasin)" opacity=".5"/></g>' +
+      '<text class="rb-t" x="90" y="140" font-size="18" text-anchor="middle" style="fill:var(--rumeysa)">ŞEKİL</text>' +
+      '<text class="rb-s" x="90" y="156" font-size="11" text-anchor="middle">dambıl</text>' +
+      '<text class="rb-t" x="230" y="140" font-size="18" text-anchor="middle" style="fill:var(--yasin)">HACİM</text>' +
+      '<text class="rb-s" x="230" y="156" font-size="11" text-anchor="middle">fazla kalori</text>' +
+      '</svg>' +
+      '<p class="rb-cap rb-a" style="--i:2">Büyüten: <s>halter</s> değil, <em>tabaktaki fazlalık.</em></p>' +
+      q("çok fazla kalori") + '</article>';
+
+    /* 5 YAĞ */
+    var ar = function (x, y, dir, d) {
+      var s = dir > 0 ? "h10m-4 -4l4 4l-4 4" : "h-10m4 -4l-4 4l4 4";
+      return '<path class="rb-nudge" style="--dx:' + (dir > 0 ? 5 : -5) + 'px;animation-delay:' + (1.4 + d) + 's" d="M' + x + ' ' + y + s + '" stroke="var(--rumeysa)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>';
+    };
+    h += '<article class="rb-card"><div class="rb-kick"><i>5</i>Yağ nereden gider?</div>' +
+      '<svg viewBox="0 0 320 250" role="img" aria-label="Karın hareketi karın yağını eritmez; kalori açığıyla yağ vücutta her yerden azalır">' +
+      '<text class="rb-t" x="8" y="14" font-size="14" style="fill:var(--yasin)">YANLIŞ</text>' +
+      '<g class="rb-a" style="--i:0"><rect x="8" y="22" width="100" height="34" rx="10" fill="var(--surface)" stroke="var(--line)" stroke-width="2"/><text class="rb-t" x="58" y="44" font-size="15" text-anchor="middle">karın hareketi</text>' +
+      '<line x1="116" y1="39" x2="204" y2="39" stroke="var(--muted)" stroke-width="3" stroke-dasharray="4 5"/>' +
+      '<rect x="212" y="22" width="100" height="34" rx="10" fill="var(--surface)" stroke="var(--line)" stroke-width="2"/><text class="rb-t" x="262" y="44" font-size="15" text-anchor="middle">karın yağı</text></g>' +
+      '<path class="rb-draw" pathLength="1" style="--i:3" d="M146 22L174 56M174 22L146 56" stroke="var(--yasin)" stroke-width="5" stroke-linecap="round"/>' +
+      '<text class="rb-t" x="8" y="96" font-size="14" style="fill:var(--rumeysa)">DOĞRU</text>' +
+      '<g class="rb-a" style="--i:4"><rect x="8" y="152" width="120" height="34" rx="10" fill="var(--rumeysa-soft)" stroke="var(--rumeysa)" stroke-width="2"/><text class="rb-t" x="68" y="174" font-size="15" text-anchor="middle" style="fill:var(--rumeysa)">kalori açığı</text>' +
+      '<path d="M134 169h46m-6 -5l6 5l-6 5" stroke="var(--rumeysa)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" fill="none"/></g>' +
+      '<g transform="translate(192 98) scale(.72)">' +
+      '<g fill="none" stroke="var(--muted)" stroke-width="2.5" stroke-dasharray="5 4" stroke-linejoin="round"><use href="#rb-fig"/></g>' +
+      '<g class="rb-shrink"><g fill="var(--rumeysa-soft)" stroke="var(--rumeysa)" stroke-width="3" stroke-linejoin="round"><use href="#rb-fig"/></g></g></g>' +
+      ar(196, 148, 1, 0) + ar(196, 168, 1, .2) + ar(196, 194, 1, .4) + ar(276, 148, -1, 0) + ar(276, 168, -1, .2) + ar(276, 194, -1, .4) +
+      '<text class="rb-s" x="68" y="206" font-size="11" text-anchor="middle">yağ her yerden azalır</text>' +
+      '</svg>' +
+      '<p class="rb-cap rb-a" style="--i:5">Tek bölge yok. <em>Hepsi birlikte</em> küçülür.</p>' +
+      q("Aslında hiçbir egzersiz yağ yakmaz.") + q("bölgesel olarak yağ yakamayız") + '</article>';
+
+    /* 6 TER ≠ İLERLEME */
+    h += '<article class="rb-card rb-full"><div class="rb-kick"><i>6</i>Ter ≠ ilerleme</div>' +
+      '<span class="rb-tag rb-corner">temsili</span>' +
+      '<p class="rb-cap rb-a" style="--i:0">Önemli olan terlemek değil: <em>geçen haftadan biraz daha güçlü olmak.</em></p>' +
+      '<svg viewBox="0 0 320 170" role="img" aria-label="Temsili grafik: 12 haftada yalnız terleten hareketler düz kalır, ağırlık ve ilerleme yükselir">' +
+      '<g stroke="var(--line)" stroke-width="1"><line x1="36" y1="130" x2="308" y2="130"/><line x1="36" y1="90" x2="308" y2="90" stroke-dasharray="3 4"/><line x1="36" y1="50" x2="308" y2="50" stroke-dasharray="3 4"/><line x1="36" y1="14" x2="36" y2="130"/></g>' +
+      '<text class="rb-s" x="4" y="12" font-size="11">güç</text>' +
+      '<text class="rb-s" x="36" y="150" font-size="11">1. hafta</text><text class="rb-s" x="308" y="150" font-size="11" text-anchor="end">12. hafta</text>' +
+      '<path class="rb-draw" pathLength="1" style="--i:0" d="M36 112C90 110 150 114 200 110S280 111 308 109" stroke="var(--muted)" stroke-width="4" stroke-linecap="round" fill="none"/>' +
+      '<path class="rb-draw" pathLength="1" style="--i:2" d="M36 118C90 112 120 100 160 84S250 44 308 22" stroke="var(--rumeysa)" stroke-width="5" stroke-linecap="round" fill="none"/>' +
+      '<circle class="rb-a" style="--i:12" cx="308" cy="22" r="6" fill="var(--rumeysa)"/><circle class="rb-a" style="--i:10" cx="308" cy="109" r="5" fill="var(--muted)"/>' +
+      '</svg>' +
+      '<div class="rb-legend"><span><i style="background:var(--muted)"></i>Sadece terleten hareketler</span><span><i style="background:var(--rumeysa)"></i>Ağırlık + ilerleme</span></div>' +
+      q("Yorulmak ve terlemek iyi bir antrenman anlamına gelmez") + '</article>';
+
+    /* 7 INSTAGRAM vs PROGRAM */
+    h += '<article class="rb-card rb-full"><div class="rb-kick"><i>7</i>Instagram mı, program mı?</div><div class="rb-cmp">' +
+      '<div class="rb-col bad"><div class="rb-colh"><span aria-hidden="true">✕</span>Instagram</div>' +
+      item(1, "reps", "100 tekrar hafif hareket", "", "✕") +
+      item(2, "sweat", "Sadece ter", "", "✕") +
+      item(3, "spot", "Bölgesel incelme vaadi", "", "✕") +
+      item(4, "loop", "Her hafta aynı", "", "✕") + '</div>' +
+      '<div class="rb-col good"><div class="rb-colh"><span aria-hidden="true">✓</span>Bu program</div>' +
+      item(2, "dumb", "Kas zorlanır", "", "✓") +
+      item(3, "up", "Her hafta biraz daha ağır", "", "✓") +
+      item(4, "hip", "Kalça için en etkili: hip thrust, RDL, split squat", "Ağırsağlam'a göre", "✓") +
+      item(5, "ruler", "Ölçü: mezura + ayna + güç", "", "✓") + '</div>' +
+      '</div></article>';
+
+    /* 8 GÖSTERGE */
+    h += '<article class="rb-card rb-full"><div class="rb-kick"><i>8</i>Hedef yağ oranı</div>' +
+      '<div class="rb-gauge-wrap"><svg viewBox="0 0 320 175" role="img" aria-label="Yağ oranı göstergesi; yüzde 15 ile 25 arası hedef bölge">' +
+      '<path d="M50 140A110 110 0 0 1 270 140" fill="none" stroke="var(--line)" stroke-width="16" stroke-linecap="round"/>' +
+      '<path class="rb-band" pathLength="1" d="M' + g15[0] + ' ' + g15[1] + 'A110 110 0 0 1 ' + g25[0] + ' ' + g25[1] + '" fill="none" stroke="var(--rumeysa)" stroke-width="16" stroke-linecap="butt"/>' +
+      '<text class="rb-t" x="' + l15[0] + '" y="' + l15[1] + '" font-size="14" text-anchor="end" style="fill:var(--rumeysa)">%15</text>' +
+      '<text class="rb-t" x="' + l25[0] + '" y="' + l25[1] + '" font-size="14" text-anchor="start" style="fill:var(--rumeysa)">%25</text>' +
+      '<text class="rb-s" x="50" y="162" font-size="11" text-anchor="middle">%0</text><text class="rb-s" x="270" y="162" font-size="11" text-anchor="middle">%40</text>' +
+      '<g class="rb-needle"><line x1="160" y1="140" x2="160" y2="52" stroke="var(--ink)" stroke-width="5" stroke-linecap="round"/></g>' +
+      '<circle cx="160" cy="140" r="9" fill="var(--ink)"/>' +
+      '</svg></div>' +
+      '<div class="rb-big rb-a" style="--i:2;text-align:center;font-size:clamp(2.4rem,11vw,3.4rem);color:var(--rumeysa)">%15 – 25</div>' +
+      '<p class="rb-cap rb-a" style="--i:3;text-align:center">gayet iyi bir hedef.</p>' +
+      '<div style="max-width:560px;margin:0 auto;width:100%">' + q("%15 – 25 arasındaki yağ oranı gayet iyi bir hedef.") + '</div>' +
+      '<div class="rb-close rb-a" style="--i:6">Hedef: sıkı, güçlü, enerjik.<span>İri değil.</span></div></article>';
+
+    h += '</div>';
+    h += '<p class="rb-src">Alıntılar: Ağırsağlam — <a href="' + SRC1 + '" target="_blank" rel="noopener">Kadınlar için vücut geliştirme</a> ve <a href="' + SRC2 + '" target="_blank" rel="noopener">Kadınlar için incelme</a> yazıları.</p>';
+    return h;
+  }
+
+  /* ---------- tetikleme: kart görününce bir kez oynar ---------- */
+  function setup(root) {
+    var cards = root.querySelectorAll(".rb-card");
+    var reduce = false;
+    try { reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches; } catch (e) {}
+    function showAll() { for (var i = 0; i < cards.length; i++) cards[i].classList.add("rb-in"); }
+    if (reduce || !("IntersectionObserver" in window)) { showAll(); return; }
+    try {
+      root.classList.add("rb-js");
+      var io = new IntersectionObserver(function (entries) {
+        entries.forEach(function (en) {
+          if (en.isIntersecting) { en.target.classList.add("rb-in"); io.unobserve(en.target); }
+        });
+      }, { threshold: 0.3 });
+      for (var i = 0; i < cards.length; i++) io.observe(cards[i]);
+    } catch (e) {
+      root.classList.remove("rb-js");
+      showAll();
+    }
+  }
+
+  function mount(root) {
+    if (root.getAttribute("data-rb") === "1") return;
+    root.setAttribute("data-rb", "1");
+    var st = document.createElement("style");
+    st.textContent = CSS;
+    root.appendChild(st);
+    var box = document.createElement("div");
+    box.innerHTML = html();
+    while (box.firstChild) root.appendChild(box.firstChild);
+    setup(root);
+  }
+
+  /* div sayfa tarafından sonradan üretilebilir: hazırsa bağla, değilse bekle */
+  function find() { return document.getElementById("info-rumeysa"); }
+  function start() {
+    var el = find();
+    if (el) { mount(el); return; }
+    var mo = new MutationObserver(function () {
+      var e = find();
+      if (e) { mo.disconnect(); mount(e); }
+    });
+    mo.observe(document.documentElement, { childList: true, subtree: true });
+  }
+  start();
+})();
+
+</script>
+</body>
+</html>
