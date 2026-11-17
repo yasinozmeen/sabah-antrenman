@@ -1,0 +1,5 @@
+# Sadece index.html ve .nojekyll yayınlanır (depo herkese açık)
+*
+!index.html
+!.nojekyll
+!.gitignore
